@@ -1,0 +1,25 @@
+includes:
+    - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    level: 5
+
+    ignoreErrors:
+#        - '#Call to an undefined static method .+::count\(\)#'
+#        - '#Call to an undefined static method .+::select\(\)#'
+#        - '#Call to an undefined static method .+::whereIn\(\)#'
+#        - '#Call to private method where.+#'
+
+    excludePaths:
+        - 'app/Http/Middleware'
+        - 'app/Http/Kernel.php'
+        - 'app/Providers'
+        - 'app/Console/Kernel.php'
+        - 'app/Exceptions/Handler.php'
+
+    checkMissingIterableValueType: false
+
+    noUnnecessaryCollectionCallExcept: ['pluck']
