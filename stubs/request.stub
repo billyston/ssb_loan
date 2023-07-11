@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use App\Traits\ResponseBuilder;
+
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Foundation\Http\FormRequest;
+
+class {{ class }} extends FormRequest
+{
+    use ResponseBuilder;
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException($this->unprocessableEntityResponseBuilder(
+            status: true,
+            code: Response::HTTP_UNPROCESSABLE_ENTITY,
+            message: 'Unprocessable request.',
+            description: 'The request is invalid. Check the request and try again.',
+            error: $validator->errors()->all()
+        ));
+    }
+
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'data' => ['required'],
+            'data.type' => ['required', 'string', 'in:'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'data.required' => 'The data field is invalid',
+
+            'data.type.required' => 'The type is required',
+            'data.type.string' => 'The type must be of a string',
+        ];
+    }
+}

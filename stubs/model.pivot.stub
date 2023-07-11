@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Relations\Pivot;
+
+class {{ class }} extends Pivot
+{
+    protected $guarded = ['id'];
+
+    protected $casts = [
+    ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'resource_id';
+    }
+}
