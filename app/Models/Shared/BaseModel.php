@@ -12,7 +12,7 @@ abstract class BaseModel extends Model
 {
     use HasFactory;
 
-    protected static function newFactory()
+    protected static function newFactory(): mixed
     {
         $parts = Str::of(get_called_class())->explode("\\");
         $domain = $parts[1];
