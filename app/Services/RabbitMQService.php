@@ -8,10 +8,9 @@ use Exception;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 
-class RabbitMQService
+final class RabbitMQService
 {
     protected AMQPStreamConnection $connection;
-
     protected \PhpAmqpLib\Channel\AMQPChannel $channel;
 
     /**
@@ -31,32 +30,18 @@ class RabbitMQService
     }
 
     /**
-     * Publishes a message to the specified topic.
+     * @throws Exception
      */
+    public function __destruct()
+    {
+        $this->channel->close();
+        $this->connection->close();
+    }
+
     public function publish(string $exchange, string $type, string $queue, string $routingKey, array $data): void
     {
-        $this->channel->queue_declare(
-            queue: $queue,
-            passive: false,
-            durable: true,
-            exclusive: false,
-            auto_delete: false
-        );
-        $this->channel->exchange_declare(
-            exchange: $exchange,
-            type: $type,
-            durable: true,
-            auto_delete: false
-        );
-        $this->channel->queue_bind($queue, $exchange);
-        $message = new AMQPMessage(
-            body: $data,
-            properties: array(
-                'content_type' => 'text/plain',
-                'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT,
-                'routingKey' => $routingKey
-            ),
-        );
+        $this->setupQueueAndExchange($exchange, $type, $queue, $routingKey);
+        $message = new AMQPMessage(body: json_encode($data));
         $this->channel->basic_publish(
             msg: $message,
             exchange: $exchange,
@@ -64,16 +49,24 @@ class RabbitMQService
         );
     }
 
-    /**
-     * Consumes messages from the specified topic.
-     */
     public function consume(string $exchange, string $type, string $queue, string $routingKey, callable $callback): void
+    {
+        $this->setupQueueAndExchange($exchange, $type, $queue, $routingKey);
+        $this->channel->basic_consume(
+            queue: $queue,
+            callback: $callback
+        );
+
+        while ($this->channel->is_consuming()) {
+            $this->channel->wait();
+        }
+    }
+
+    private function setupQueueAndExchange(string $exchange, string $type, string $queue, string $routingKey): void
     {
         $this->channel->queue_declare(
             queue: $queue,
-            passive: false,
             durable: true,
-            exclusive: false,
             auto_delete: false
         );
         $this->channel->exchange_declare(
@@ -87,29 +80,5 @@ class RabbitMQService
             exchange: $exchange,
             routing_key: $routingKey
         );
-        $this->channel->basic_consume(
-            queue: $queue,
-            consumer_tag: '',
-            no_local: false,
-            no_ack: false,
-            exclusive: false,
-            nowait: false,
-            callback: $callback
-        );
-
-        while ($this->channel->is_consuming()) {
-            $this->channel->wait();
-        }
-    }
-
-    /**
-     * Closes the channel and connection when the object is destructed.
-     *
-     * @throws Exception
-     */
-    public function __destruct()
-    {
-        $this->channel->close();
-        $this->connection->close();
     }
 }

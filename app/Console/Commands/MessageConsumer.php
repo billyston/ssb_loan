@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\RabbitMQService;
+use Domain\Customer\Actions\CreateCustomerAction;
 use Illuminate\Console\Command;
 
 final class MessageConsumer extends Command
@@ -16,12 +17,18 @@ final class MessageConsumer extends Command
         $rabbitMQService = new RabbitMQService;
         $rabbitMQService->consume(exchange: 'ssb_direct', type: 'direct', queue: 'loan', routingKey: 'ssb_loa', callback: function ($message) {
 
-//            $headers = $message->has('application_headers') ? $message->get('application_headers')->getNativeData() : [];
+            $headers = $message->get('application_headers')->getNativeData();
 
-            logger(message: $message->get('application_headers')->getNativeData());
-            logger(message: json_decode($message->getBody(), associative: true));
-
-            $message->ack();
+            // Check the actions and call the right class
+            if (data_get(target: $headers, key: 'action') === 'CreateCustomerAction'){
+                $register = CreateCustomerAction::execute(
+                    json_decode(
+                        json: $message->getBody(),
+                        associative: true
+                    )
+                );
+                if ($register) $message->ack();
+            }
         });
     }
 }

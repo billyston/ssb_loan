@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use App\Traits\ResponseBuilder;
+use App\Common\ResponseBuilder;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -23,8 +23,6 @@ use Throwable;
 
 class Handler extends ExceptionHandler
 {
-    use ResponseBuilder;
-
     protected $levels = [
         //
     ];
@@ -50,13 +48,13 @@ class Handler extends ExceptionHandler
     public function render($request, $e): JsonResponse
     {
         if ($e instanceof ThrottleRequestsException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_TOO_MANY_REQUESTS,
                 message: 'Too many requests.'
             );
         } elseif ($e instanceof ModelNotFoundException && $request->wantsJson()) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_NOT_FOUND,
                 message: 'Resource '.str_replace(
@@ -64,47 +62,47 @@ class Handler extends ExceptionHandler
                     subject: $e->getModel()).' not found.'
             );
         } elseif ($e instanceof NotFoundHttpException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_NOT_FOUND,
                 message: 'Route not found.',
                 description: 'The resources your are looking for does not exist.'
             );
         } elseif ($e instanceof MethodNotAllowedHttpException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_METHOD_NOT_ALLOWED,
                 message: 'Method not allowed',
                 description: 'You are not allowed to perform this action.'
             );
         } elseif ($e instanceof QueryException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_UNAUTHORIZED,
                 message: 'Invalid database query.',
                 description: $e->getMessage()
             );
         } elseif ($e instanceof RelationNotFoundException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
                 message: 'Undefined relationship.'
             );
         } elseif ($e instanceof AuthenticationException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_UNAUTHORIZED,
                 message: 'Unauthorised Request.',
                 description: 'User not authenticated to perform this action.'
             );
         } elseif ($e instanceof AuthorizationException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_FORBIDDEN,
                 message: 'This action is unauthorized.'
             );
         } elseif ($e instanceof AccessDeniedHttpException) {
-            return $this->resourcesResponseBuilder(
+            return ResponseBuilder::resourcesResponseBuilder(
                 status: false,
                 code: Response::HTTP_FORBIDDEN,
                 message: 'This action is unauthorized.'
