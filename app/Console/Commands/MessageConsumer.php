@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Services\RabbitMQService;
 use Domain\Customer\Actions\ActivateCustomerAction;
 use Domain\Customer\Actions\CreateCustomerAction;
+use Domain\Customer\Actions\LinkedAccount\CreateLinkedAccountAction;
 use Illuminate\Console\Command;
 
 final class MessageConsumer extends Command
@@ -31,6 +32,15 @@ final class MessageConsumer extends Command
             }
             elseif (data_get(target: $headers, key: 'action') === 'ActivateCustomerAction'){
                 $register = ActivateCustomerAction::execute(
+                    json_decode(
+                        json: $message->getBody(),
+                        associative: true
+                    )
+                );
+                if ($register) $message->ack();
+            }
+            elseif (data_get(target: $headers, key: 'action') === 'CreateLinkedAccountAction'){
+                $register = CreateLinkedAccountAction::execute(
                     json_decode(
                         json: $message->getBody(),
                         associative: true
