@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Exception;
+use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 final class RabbitMQService
 {
     protected AMQPStreamConnection $connection;
-    protected \PhpAmqpLib\Channel\AMQPChannel $channel;
+    protected AMQPChannel $channel;
 
     /**
      * @throws Exception
@@ -19,12 +21,11 @@ final class RabbitMQService
     public function __construct()
     {
         $this->connection = new AMQPStreamConnection(
-            env(key: 'RABBITMQ_HOST'),
-            env(key: 'RABBITMQ_PORT'),
-            env(key: 'RABBITMQ_USER'),
-            env(key: 'RABBITMQ_PASSWORD'),
-            env(key: 'RABBITMQ_VHOST'),
-            env(key: 'RABBITMQ_QUEUE_NAME')
+            config('services.rabbitmq.host'),
+            config('services.rabbitmq.port'),
+            config('services.rabbitmq.username'),
+            config('services.rabbitmq.password'),
+            config('services.rabbitmq.vhost'),
         );
         $this->channel = $this->connection->channel();
     }
@@ -38,10 +39,14 @@ final class RabbitMQService
         $this->connection->close();
     }
 
-    public function publish(string $exchange, string $type, string $queue, string $routingKey, array $data): void
+    public function publish(string $exchange, string $type, string $queue, string $routingKey, array $data, array $headers): void
     {
         $this->setupQueueAndExchange($exchange, $type, $queue, $routingKey);
         $message = new AMQPMessage(body: json_encode($data));
+
+        $headers = new AMQPTable($headers);
+        $message->set('application_headers', $headers);
+
         $this->channel->basic_publish(
             msg: $message,
             exchange: $exchange,
@@ -52,6 +57,7 @@ final class RabbitMQService
     public function consume(string $exchange, string $type, string $queue, string $routingKey, callable $callback): void
     {
         $this->setupQueueAndExchange($exchange, $type, $queue, $routingKey);
+
         $this->channel->basic_consume(
             queue: $queue,
             callback: $callback
