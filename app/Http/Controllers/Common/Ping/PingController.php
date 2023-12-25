@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Ping;
+namespace App\Http\Controllers\Common\Ping;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Domain\Customer\Actions;
+namespace Domain\Customer\Actions\Customer;
 
 use Domain\Customer\Models\Customer;
 
-final class CreateCustomerAction
+final class CustomerCreatedAction
 {
     public static function execute(array $data): bool
     {
         // Create the Customer
-        $create_customer = Customer::query()->updateOrCreate([
+        $create_customer = Customer::updateOrCreate([
             'resource_id' => data_get(
                 target: $data,
                 key: 'data.attributes.resource_id'
@@ -37,12 +37,12 @@ final class CreateCustomerAction
                 target: $data,
                 key: 'data.attributes.phone_number'
             ),
-            'email' => data_get(
+            'status' => data_get(
                 target: $data,
-                key: 'data.attributes.email'
+                key: 'data.attributes.status'
             ),
         ]);
 
-        return (bool)$create_customer;
+        return (bool) $create_customer;
     }
 }

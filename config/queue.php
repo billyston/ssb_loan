@@ -74,7 +74,7 @@ return [
         'rabbitmq' => [
             'driver' => 'rabbitmq',
             'queue' => env('RABBITMQ_QUEUE', 'default'),
-            'connection' => \App\Services\RabbitMQService::class,
+            'connection' => \App\Services\RabbitMQ\RabbitMQService::class,
 
             'hosts' => [
                 [

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string(column: 'last_name');
 
             $table->string(column: 'phone_number')->unique()->nullable();
-            $table->string(column: 'email')->unique()->nullable(value: false);
+            $table->string(column: 'email')->unique()->nullable();
 
             $table->string(column: 'status')->default(value: 'pending');
         });
